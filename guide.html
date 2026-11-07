@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FCbro 사용 가이드</title>
+<meta name="theme-color" content="#0C6B45">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+:root{--bg:#F3F4F2;--surface:#fff;--text:#141A16;--text-2:#4E5751;--line:#E2E5E1;--brand:#0C6B45;--brand-text:#0C6B45;--lime-soft:#E7F1EB}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1512;--surface:#18201C;--text:#EEF3EF;--text-2:#A9B4AD;--line:#26302B;--brand:#2E9A6A;--brand-text:#7FD3A8;--lime-soft:#1B2B23}}
+:root[data-theme="dark"]{--bg:#0F1512;--surface:#18201C;--text:#EEF3EF;--text-2:#A9B4AD;--line:#26302B;--brand:#2E9A6A;--brand-text:#7FD3A8;--lime-soft:#1B2B23}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;word-break:keep-all}
+.top{display:flex;align-items:center;gap:8px;padding:max(10px,env(safe-area-inset-top)) 16px 8px}
+.top a{color:var(--brand-text);text-decoration:none;font-weight:700;font-size:.9375rem;min-height:44px;display:flex;align-items:center}
+.top b{flex:1;font-size:1.125rem}
+.cnt{font-size:.875rem;color:var(--text-2);font-variant-numeric:tabular-nums}
+.deck{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;height:calc(100% - 132px)}
+.deck::-webkit-scrollbar{display:none}
+.sl{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:4px 16px 8px;min-height:0}
+.sl figure{margin:0;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;width:100%}
+.sl img{max-height:100%;max-width:100%;border-radius:22px;box-shadow:0 10px 30px rgba(0,0,0,.14);border:1px solid var(--line);background:var(--surface)}
+.cap{max-width:420px;text-align:center}
+.cap .n{display:inline-block;font-size:.75rem;font-weight:700;color:var(--brand-text);background:var(--lime-soft);border-radius:999px;padding:3px 10px;margin-bottom:6px}
+.cap h2{margin:0 0 4px;font-size:1.25rem}
+.cap p{margin:0;color:var(--text-2);font-size:.9375rem;line-height:1.55}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 16px max(14px,env(safe-area-inset-bottom))}
+.nav button{min-height:48px;min-width:48px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:1rem;font-weight:700;padding:0 16px;cursor:pointer}
+.nav button:disabled{opacity:.35}
+.dots{flex:1;display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.dots i{width:7px;height:7px;border-radius:9px;background:var(--line)}
+.dots i.on{background:var(--brand);width:18px}
+.end{display:flex;flex-direction:column;gap:10px;width:100%;max-width:420px}
+.end a{display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:14px;text-decoration:none;font-weight:700}
+.end .p{background:var(--brand);color:#fff}.end .g{background:var(--surface);color:var(--text);border:1px solid var(--line)}
+</style></head><body>
+<div class="top"><a href="./" aria-label="앱으로 돌아가기">← 앱</a><b>사용 가이드</b><span class="cnt" id="cnt"></span></div>
+<div class="deck" id="deck"></div>
+<div class="nav"><button id="pv" aria-label="이전">‹</button><div class="dots" id="dots" aria-hidden="true"></div><button id="nx" aria-label="다음">›</button></div>
+<script>
+const S = [
+  ['01-start', '카톡으로 시작', '운영진이 보낸 초대 링크를 누르고 "카카오로 시작하기"만 누르면 돼요. 앱을 설치할 필요가 없어요.'],
+  ['02-join', '명단에서 내 이름 고르기', '운영진이 미리 넣어 둔 이름을 골라요. 그동안 운영진이 대신 눌러 둔 투표도 내 것으로 이어져요.'],
+  ['03-home', '홈에서 바로 투표', '다가오는 일정, 지금 몇 명 오는지, 참석·늦참·불참 버튼이 한 화면에 있어요.'],
+  ['04-vote', '일정 화면', '늦참·조퇴는 뛰는 쿼터를 골라요. 공식 마감이 지나도 경기 전까지는 추가로 응답할 수 있고, "마감 후 변경"으로 따로 보여요.'],
+  ['05-create', '일정 만들기 · 운영진', '날짜·시간·구장을 고르면 공지 문구가 자동으로 만들어져요. 다 만들면 카톡 공지 카드로 단톡방에 직접 골라서 보내요.'],
+  ['06-team', '팀 나누기 · 쿼터 출전표', '실력 등급과 포지션으로 팀을 고르게 나누고, 조끼 색과 쿼터별 출전도 자동으로 짜요.'],
+  ['07-tactic', '전술판', '전략팀이 초안을 만들고 하나를 최종안으로 정해요. 회원은 확정된 전술에서 내 위치와 지시만 봐요.'],
+  ['08-result', '경기 결과', '쿼터별 점수와 골·도움을 넣어요. MOM 투표는 경기 날 밤 10시에 마감돼요.'],
+  ['09-rank', '기록 · 순위', '결과가 쌓이면 득점·도움·출석·MOM 순위가 자동으로 계산돼요.'],
+  ['10-player', '선수 카드', '시즌 평점과 능력 그래프가 나와요. 좋은 기록은 카드로 단톡방에 자랑할 수 있어요.'],
+  ['11-members', '명단 · 역할 · 운영진', '이름을 미리 넣고, 운영진·전략팀을 정하고, 초대 링크를 보내요.'],
+  ['12-a2hs', '홈 화면에 추가', '아이폰은 Safari, 안드로이드는 Chrome에서 "홈 화면에 추가"를 하면 앱처럼 아이콘으로 열려요.'],
+];
+const deck = document.getElementById('deck'), dots = document.getElementById('dots'), cnt = document.getElementById('cnt');
+const N = S.length + 1;
+deck.innerHTML = S.map(([f, t, d], i) => `<section class="sl" aria-label="${i + 1} / ${N}"><figure><img src="guide/${f}.jpg" alt="${t} 화면" loading="${i < 2 ? 'eager' : 'lazy'}"></figure><div class="cap"><span class="n">${i + 1}</span><h2>${t}</h2><p>${d}</p></div></section>`).join('') +
+  `<section class="sl" aria-label="${N} / ${N}" style="justify-content:center"><div class="cap"><h2>직접 눌러 보고 싶다면</h2><p>예시 구단으로 모든 기능을 마음껏 눌러 볼 수 있어요. 우리 구단 기록은 바뀌지 않아요.</p></div><div class="end"><a class="p" href="demo/">기능 미리 체험하기 (시연판)</a><a class="g" href="./">앱으로 돌아가기</a></div></section>`;
+dots.innerHTML = Array.from({ length: N }, () => '<i></i>').join('');
+const cur = () => Math.round(deck.scrollLeft / deck.clientWidth);
+const upd = () => { const k = cur(); cnt.textContent = (k + 1) + ' / ' + N; [...dots.children].forEach((d, i) => d.classList.toggle('on', i === k)); document.getElementById('pv').disabled = k === 0; document.getElementById('nx').disabled = k === N - 1; };
+const go = k => deck.scrollTo({ left: Math.max(0, Math.min(N - 1, k)) * deck.clientWidth, behavior: 'smooth' });
+document.getElementById('pv').onclick = () => go(cur() - 1); document.getElementById('nx').onclick = () => go(cur() + 1);
+deck.addEventListener('scroll', () => requestAnimationFrame(upd)); addEventListener('resize', upd);
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') go(cur() + 1); if (e.key === 'ArrowLeft') go(cur() - 1); });
+try { const th = JSON.parse(localStorage.getItem('fcapp:ui:theme') || '"light"'); if (th !== 'system') document.documentElement.setAttribute('data-theme', th); } catch (e) {}
+upd();
+</script>
+</body></html>
