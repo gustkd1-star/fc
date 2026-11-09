@@ -1,0 +1,21 @@
+name: 축구 소식 모으기
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: news, cancel-in-progress: false }
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/news.mjs news.json
+      - run: |
+          git config user.name "fc-news"
+          git config user.email "news@users.noreply.github.com"
+          git add news.json
+          git diff --cached --quiet || (git commit -m "축구 소식 갱신" && git push)
