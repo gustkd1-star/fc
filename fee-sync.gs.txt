@@ -61,20 +61,22 @@ function fcbNum(v) { var s = String(v == null ? '' : v).replace(/[,\s원₩명]/
 function fcbParse(memVals, sumVals, year, month, sheetName) {
   var hr = -1;
   for (var i = 0; i < Math.min(memVals.length, 15); i++) { var row = memVals[i].map(function (x) { return String(x).trim(); }); if (row.indexOf('이름') >= 0 && row.indexOf('상태') >= 0) { hr = i; break; } }
-  var out = { v: 1, year: year, month: month, at: new Date().toISOString(), sheet: sheetName || '', rows: [], sum: null };
+  var out = { v: 2, year: year, month: month, at: new Date().toISOString(), sheet: sheetName || '', rows: [], sum: null };
   if (hr < 0) return out;
   var H = memVals[hr].map(function (x) { return String(x).trim(); });
   var col = function (n, from) { for (var j = from || 0; j < H.length; j++) if (H[j] === n) return j; return -1; };
   var iName = col('이름'), iDue = col('납부할금액'), iPaid = col('입금금액'), iOwe = col('납부해야할금액'), iSt = col('상태'), iFine = col('연체벌금');
   var mAmt = col(month + '월'), tStart = Math.max(iSt, col('12월')) + 1, mType = col(month + '월', tStart);
   var tCols = []; for (var q = 1; q <= month; q++) tCols.push(col(q + '월', tStart));
+  var aAll = [], tAll = []; for (var q2 = 1; q2 <= 12; q2++) { aAll.push(col(q2 + '월')); tAll.push(col(q2 + '월', tStart)); }
   for (var r = hr + 1; r < memVals.length; r++) {
     var R = memVals[r], name = String(R[iName] || '').trim();
     if (!name || /^(합\s*계|합계|총계)$/.test(name)) continue;
     var oweRaw = iOwe >= 0 ? String(R[iOwe] || '').trim() : '';
     var owe = fcbNum(oweRaw);
     var last = '', lastM = 0; tCols.forEach(function (ci, k) { var t = ci >= 0 ? String(R[ci] || '').trim() : ''; if (t && !/확인/.test(t)) { last = t; lastM = k + 1; } });
-    out.rows.push({ name: name, type: mType >= 0 ? String(R[mType] || '').trim() : '', last: last, lastM: lastM, mPaid: mAmt >= 0 ? fcbNum(R[mAmt]) : 0, due: iDue >= 0 ? fcbNum(R[iDue]) : 0, paid: iPaid >= 0 ? fcbNum(R[iPaid]) : 0, owe: owe, oweText: owe ? '' : oweRaw, status: iSt >= 0 ? String(R[iSt] || '').trim() : '', fine: iFine >= 0 ? fcbNum(R[iFine]) : 0 });
+    out.rows.push({ name: name, type: mType >= 0 ? String(R[mType] || '').trim() : '', last: last, lastM: lastM, mPaid: mAmt >= 0 ? fcbNum(R[mAmt]) : 0, due: iDue >= 0 ? fcbNum(R[iDue]) : 0, paid: iPaid >= 0 ? fcbNum(R[iPaid]) : 0, owe: owe, oweText: owe ? '' : oweRaw, status: iSt >= 0 ? String(R[iSt] || '').trim() : '', fine: iFine >= 0 ? fcbNum(R[iFine]) : 0,
+      months: aAll.map(function (ca, k) { var ct = tAll[k]; return [ct >= 0 ? String(R[ct] || '').trim() : '', ca >= 0 && ca < tStart ? fcbNum(R[ca]) : 0]; }) });
   }
   // 요약표의 "당월미입금명단" 상자를 그대로 (총무가 공지하는 그 목록)
   out.list = null;
@@ -88,6 +90,10 @@ function fcbParse(memVals, sumVals, year, month, sheetName) {
     if (c < 0) continue;
     var pick = function (label) { for (var b = a + 1; b < Math.min(sumVals.length, a + 8); b++) { if (String(sumVals[b][0]).replace(/\s/g, '') === label) return [fcbNum(sumVals[b][c]), fcbNum(sumVals[b][c + 1])]; } return null; };
     out.sum = { fee: pick('월회비'), rest: pick('휴식비') };
+    // 1~12월 전체 (월별 수입 그래프용)
+    var cols12 = []; for (var mm = 1; mm <= 12; mm++) cols12.push(S.indexOf(mm + '월'));
+    var row12 = function (label) { for (var b = a + 1; b < Math.min(sumVals.length, a + 8); b++) { if (String(sumVals[b][0]).replace(/\s/g, '') === label) return cols12.map(function (cc) { return cc < 0 ? [0, 0] : [fcbNum(sumVals[b][cc]), fcbNum(sumVals[b][cc + 1])]; }); } return null; };
+    out.year12 = { fee: row12('월회비'), rest: row12('휴식비'), total: row12('합계'), annual: (function () { for (var b = a + 1; b < Math.min(sumVals.length, a + 8); b++) { if (String(sumVals[b][0]).replace(/\s/g, '') === '연납금액') return [fcbNum(sumVals[b][1]), fcbNum(sumVals[b][cols12[0] + 1])]; } return null; })() };
     break;
   }
   return out;
