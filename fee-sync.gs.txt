@@ -52,8 +52,8 @@ function fcbAutoSend() {
   if (!data.rows.length) return '회원 줄을 하나도 읽지 못했어요. "이름" 칸이 있는 머리 줄을 확인해 주세요.';
   var r = UrlFetchApp.fetch(FCB_URL, { method: 'post', contentType: 'application/json', headers: { apikey: FCB_PUBLIC }, payload: JSON.stringify({ p_key: key, p_data: data }), muteHttpExceptions: true });
   if (r.getResponseCode() >= 300) { var t = r.getContentText(); try { t = JSON.parse(t).message || t; } catch (e) { /* */ } return '보내지 못했어요: ' + t; }
-  var owe = data.rows.filter(function (x) { return x.owe > 0; }).length;
-  return '보냈어요 · ' + m + '월 ' + data.rows.length + '명 · 미납 ' + owe + '명';
+  var un = data.list ? data.list.filter(function (x) { return !/완료/.test(x.val); }).length : null;
+  return '보냈어요 · ' + m + '월 ' + data.rows.length + '명' + (un == null ? ' · 당월미입금명단을 못 찾았어요' : ' · 당월미입금명단 미입금 ' + un + '명');
 }
 
 // ---- 시트 읽기 (앱 쪽 검사에서도 이 함수를 그대로 써요) ----
